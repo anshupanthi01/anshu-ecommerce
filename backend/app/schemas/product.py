@@ -3,8 +3,6 @@ from typing import Optional
 from datetime import datetime
 from decimal import Decimal
 
-
-# ✅ Base schema (shared fields)
 class ProductBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
