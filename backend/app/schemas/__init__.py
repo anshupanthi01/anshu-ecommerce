@@ -7,7 +7,7 @@ from app.schemas.user import (
     PasswordChange,
 )
 
-from app.schemas. product import (
+from app.schemas.product import (
     ProductBase,
     ProductCreate,
     ProductUpdate,
