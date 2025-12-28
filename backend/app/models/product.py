@@ -13,9 +13,10 @@ class Product(Base):
     price = Column(Numeric(10, 2), nullable=False)
     stock = Column(Integer, default=0, nullable=False)
     sku = Column(String(100), unique=True, nullable=True)
-    is_active = Column(Integer, default=1, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
 
+    is_active = Column(Integer, default=1, nullable=False)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func. now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
