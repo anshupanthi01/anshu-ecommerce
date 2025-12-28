@@ -1,50 +1,30 @@
-from os import getenv
-from dotenv import load_dotenv, find_dotenv
-
-# SQLAlchemy sync engine (use future=True for 2.0 style behavior)
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from app.config import settings
 
-# load .env if found (ImportError will propagate if package missing)
-load_dotenv(find_dotenv())
 
-DATABASE_URL = getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError(
-        "DATABASE_URL not found in environment variables. Create a .env file with DATABASE_URL"
-    )
+# ✅ Create engine using config
+engine = create_engine(settings.DATABASE_URL)
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=getenv("DEBUG", "false").lower() == "true",
-    pool_pre_ping=True,
-    pool_size=10,        # tune to your DB server
-    max_overflow=20,     # tune to your DB server
-    future=True,
-)
+# ✅ Create session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Use class_=Session and future=True for the sessionmaker
-SessionLocal = sessionmaker(
-    bind=engine,
-    class_=Session,
-    autoflush=False,
-    expire_on_commit=False,
-    future=True,
-)
-
+# ✅ Base class for models
 Base = declarative_base()
 
-# For FastAPI dependency injection:
-from typing import Generator
 
-def get_db() -> Generator[Session, None, None]:
+# ✅ Dependency to get database session
+def get_db():
     db = SessionLocal()
     try:
         yield db
-    finally:
+    finally: 
         db.close()
 
+
+# ✅ Initialize database (create tables)
 def init_db():
-    import app.models
+    from app.models import User, Product, Category, Cart, CartItem, Order, OrderItem
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created successfully!")
+    print("✅ All tables created!")
