@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import init_db
 from app.config import settings
+from fastapi.staticfiles import StaticFiles
+
 print("CURRENT SECRET_KEY:", settings.SECRET_KEY)
 
 # ✅ Import all routers
@@ -34,6 +36,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ✅ Add CORS middleware AFTER the app is created!
 app.add_middleware(

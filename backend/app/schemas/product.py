@@ -12,6 +12,7 @@ class ProductBase(BaseModel):
     stock: int = Field(default=0, ge=0)
     sku: Optional[str] = Field(None, max_length=100)
     category_id: Optional[int] = None
+    image_url: Optional[str] = None
 
 
 # ✅ For creating product (request)
@@ -28,6 +29,7 @@ class ProductUpdate(BaseModel):
     sku: Optional[str] = Field(None, max_length=100)
     category_id: Optional[int] = None
     is_active: Optional[int] = Field(None, ge=0, le=1)
+    image_url: Optional[str] = None
 
 
 # ✅ For product response
@@ -36,6 +38,7 @@ class ProductResponse(ProductBase):
     is_active: int
     created_at: datetime
     updated_at: datetime
+    image_url: Optional[str] = None
 
     class Config: 
         from_attributes = True

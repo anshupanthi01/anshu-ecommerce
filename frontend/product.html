@@ -73,56 +73,57 @@
     }
 
     function renderProduct(product) {
-      document.title = product.name + ' | Glow Fashion';
-      document.getElementById('product-container').innerHTML = `
-        <div style="display:flex;flex-wrap:wrap;gap:2em;">
-          <div style="min-width:260px;flex:1;">
-            <div class="img-container" style="min-width:240px;min-height:260px">
-              <img src="placeholder-product.png" alt="Product image" style="max-width:90%;"/>
-            </div>
+  document.title = product.name + ' | Glow Fashion';
+  document.getElementById('product-container').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:2em;">
+      <div style="min-width:260px;flex:1;">
+        <div class="img-container" style="min-width:240px;min-height:260px">
+          <img src="${product.image_url ? 'http://localhost:8000' + product.image_url : 'placeholder-product.png'}"
+               alt="Product image" style="max-width:90%;"/>
+        </div>
+      </div>
+      <div style="flex:2;min-width:250px;">
+        <h2 style="margin:0 0 0.3em 0;">${product.name}</h2>
+        <div class="prod-price" style="font-size:1.2em;">&#8377;${product.price}</div>
+        <div style="color:#ea4c89; font-size:1.05em; font-weight:600; margin:0.7em 0;">
+          ${product.stock ? product.stock+" in stock" : "<span style='color:#bbb;'>Out of stock</span>"}
+        </div>
+        <div style="margin-bottom:0.6em;">${product.description||""}</div>
+        <div id="variant-selectors" style="margin-bottom:1.2em;">
+          <!-- For demo: static variant selectors! -->
+          <label>Size: 
+            <select style="margin-right:1.3em;">
+              <option>S</option><option>M</option><option>L</option><option>XL</option>
+            </select>
+          </label>
+          <label>Color:
+            <select>
+              <option>Pink</option><option>White</option><option>Black</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn" id="add-to-cart-btn" ${!product.stock ? "disabled" : ""}>Add to Cart</button>
+        <div id="add-to-cart-msg" style="margin-top:0.5em;"></div>
+        <hr style="margin:2em 0 0.6em 0;">
+        <h3>Customer Reviews</h3>
+        <div>
+          <!-- Static/fake reviews for now -->
+          <div style="background:#fff6f9;border-radius:7px;padding:0.8em;margin-bottom:0.7em;">
+            <span style="font-weight:600;font-size:1.05em;">Priya S.</span> &nbsp;
+            <span style="color:#ffc107;">★★★★★</span>
+            <div>"Very stylish and good fabric, I loved the color!"</div>
           </div>
-          <div style="flex:2;min-width:250px;">
-            <h2 style="margin:0 0 0.3em 0;">${product.name}</h2>
-            <div class="prod-price" style="font-size:1.2em;">&#8377;${product.price}</div>
-            <div style="color:#ea4c89; font-size:1.05em; font-weight:600; margin:0.7em 0;">
-              ${product.stock ? product.stock+" in stock" : "<span style='color:#bbb;'>Out of stock</span>"}
-            </div>
-            <div style="margin-bottom:0.6em;">${product.description||""}</div>
-            <div id="variant-selectors" style="margin-bottom:1.2em;">
-              <!-- For demo: static variant selectors! -->
-              <label>Size: 
-                <select style="margin-right:1.3em;">
-                  <option>S</option><option>M</option><option>L</option><option>XL</option>
-                </select>
-              </label>
-              <label>Color:
-                <select>
-                  <option>Pink</option><option>White</option><option>Black</option>
-                </select>
-              </label>
-            </div>
-            <button class="btn" id="add-to-cart-btn" ${!product.stock ? "disabled" : ""}>Add to Cart</button>
-            <div id="add-to-cart-msg" style="margin-top:0.5em;"></div>
-            <hr style="margin:2em 0 0.6em 0;">
-            <h3>Customer Reviews</h3>
-            <div>
-              <!-- Static/fake reviews for now -->
-              <div style="background:#fff6f9;border-radius:7px;padding:0.8em;margin-bottom:0.7em;">
-                <span style="font-weight:600;font-size:1.05em;">Priya S.</span> &nbsp;
-                <span style="color:#ffc107;">★★★★★</span>
-                <div>"Very stylish and good fabric, I loved the color!"</div>
-              </div>
-              <div style="background:#fff6f9;border-radius:7px;padding:0.7em;">
-                <span style="font-weight:600;font-size:1.05em;">Ayesha K.</span> &nbsp;
-                <span style="color:#ffc107;">★★★★☆</span>
-                <div>"Fitting is proper and quality is excellent for the price!"</div>
-              </div>
-            </div>
+          <div style="background:#fff6f9;border-radius:7px;padding:0.7em;">
+            <span style="font-weight:600;font-size:1.05em;">Ayesha K.</span> &nbsp;
+            <span style="color:#ffc107;">★★★★☆</span>
+            <div>"Fitting is proper and quality is excellent for the price!"</div>
           </div>
         </div>
-      `;
-      document.getElementById('add-to-cart-btn').onclick = () => handleAddToCart(product.id);
-    }
+      </div>
+    </div>
+  `;
+  document.getElementById('add-to-cart-btn').onclick = () => handleAddToCart(product.id);
+}
 
     async function handleAddToCart(productId) {
       if (!isLoggedIn()) { window.location.href = "login.html"; return; }

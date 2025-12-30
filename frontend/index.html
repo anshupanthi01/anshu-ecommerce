@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="style.css">
   <!-- Poppins font from Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script type="module" src="app.js"></script>
 </head>
 <body>
@@ -16,13 +16,13 @@
       <span class="logo">Glow</span>
       <nav>
         <a href="index.html" class="active">Home</a>
-        <a href="products.html" id="nav-products">Shop</a>
-        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
-        <a href="cart.html" id="nav-cart">Cart</a>
-        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
-        <a href="login.html" id="nav-login">Login</a>
-        <a href="register.html" id="nav-register">Register</a>
-        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+        <a href="products.html" id="nav-products" class="icon-shop">Shop</a>
+        <a href="orders.html" id="nav-orders" class="icon-orders" style="display:none;">Orders</a>
+        <a href="cart.html" id="nav-cart" class="icon-cart">Cart</a>
+        <a href="profile.html" id="nav-user" class="icon-user" style="display:none;">Profile</a>
+        <a href="login.html" id="nav-login" class="icon-login">Login</a>
+        <a href="register.html" id="nav-register" class="icon-register">Register</a>
+        <a href="#" id="nav-logout" class="icon-logout" style="display:none;" onclick="logout();return false;">Logout</a>
       </nav>
     </div>
   </header>
@@ -33,12 +33,12 @@
   </section>
 
   <section>
-    <h2 style="text-align:center;">Shop by Category</h2>
-    <div id="categories-list" class="product-grid" style="margin-bottom:2.7em;"></div>
+    <h2>Shop by Category</h2>
+    <div id="categories-list" class="product-grid"></div>
   </section>
 
   <section>
-    <h2 style="text-align:center;">Featured Products</h2>
+    <h2>Featured Products</h2>
     <div id="featured-products" class="product-grid"></div>
     <div id="home-products-loader"></div>
   </section>
@@ -53,7 +53,7 @@
     <div class="contact-info">
       ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
     </div>
-    <div style="margin-top:0.4em; color:#af3f72;">
+    <div>
       &copy; 2025 Glow. All rights reserved.
     </div>
   </footer>
@@ -93,12 +93,12 @@
           return;
         }
         categoriesDiv.innerHTML = cats.map(cat => `
-          <div class="product-card" style="min-height:unset;cursor:pointer;" onclick="window.location='products.html?category=${cat.id}'">
-            <div class="img-container" style="background:#fce0eb;">
-              <img src="placeholder-category.png" alt="Category" style="height:64px;width:64px;object-fit:contain;" />
+          <div class="product-card category-card" onclick="window.location='products.html?category=${cat.id}'">
+            <div class="img-container">
+              <img src="${cat.image_url ? 'http://localhost:8000' + cat.image_url : 'placeholder-category.png'}" alt="Category" style="height:80px;width:80px;object-fit:contain;" />
             </div>
-            <div class="prod-details" style="align-items:center;">
-              <span class="prod-name" style="margin-bottom:0;">${cat.name}</span>
+            <div class="prod-details">
+              <span class="prod-name">${cat.name}</span>
             </div>
           </div>
         `).join('');
@@ -108,7 +108,8 @@
     }
 
     async function loadFeaturedProducts() {
-      showLoader('home-products-loader');
+      const loaderDiv = document.getElementById('home-products-loader');
+      loaderDiv.innerHTML = '<div class="loader"></div>';
       const productsDiv = document.getElementById('featured-products');
       productsDiv.innerHTML = '';
       try {
@@ -116,14 +117,14 @@
         let res = await apiRequest('/products/?skip=0&limit=4', 'GET');
         if (!res || res.length === 0) {
           productsDiv.innerHTML = '<div>No featured products available.</div>';
-          hideLoader('home-products-loader');
+          loaderDiv.innerHTML = '';
           return;
         }
         productsDiv.innerHTML = res.map(prod => productCardHTML(prod)).join('');
       } catch (err) {
         productsDiv.innerHTML = "<div class='error-message'>Could not load featured products.</div>";
       }
-      hideLoader('home-products-loader');
+      loaderDiv.innerHTML = '';
     }
 
     function productCardHTML(product) {
@@ -136,7 +137,7 @@
             <span class="prod-name">${product.name}</span>
             <div class="prod-desc">${product.description ? product.description : ""}</div>
             <span class="prod-price">&#8377;${product.price}</span>
-            <button class="btn btn-block" onclick="window.location='product.html?id=${product.id}'">View</button>
+            <button class="btn btn-block" onclick="window.location='product.html?id=${product.id}'">View Product</button>
           </div>
         </div>
       `;

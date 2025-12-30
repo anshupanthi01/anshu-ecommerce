@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List
+import os
+from uuid import uuid4
 from app.database import get_db
 from app.models import User
 from app.schemas import CategoryCreate, CategoryUpdate, CategoryResponse, CategoryWithCount
@@ -29,7 +31,6 @@ def list_categories(
     categories = get_all_categories(db, skip=skip, limit=limit)
     return categories
 
-
 # ✅ Get single category
 @router.get("/{category_id}", response_model=CategoryResponse)
 def get_category(category_id: int, db: Session = Depends(get_db)):
@@ -56,39 +57,75 @@ def get_category_count(category_id: int, db: Session = Depends(get_db)):
 
 # ✅ Create category (protected)
 @router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
-def add_category(
-    category: CategoryCreate,
+async def add_category(
+    name: str = Form(...),
+    description: str = Form(""),
+    image: UploadFile = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Check if category name exists
-    existing = get_category_by_name(db, category.name)
+    existing = get_category_by_name(db, name)
     if existing: 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Category name already exists"
         )
-    
-    new_category = create_category(db, category)
+
+    image_url = None
+    if image:
+        ext = os.path.splitext(image.filename)[-1]
+        filename = f"{uuid4().hex}{ext}"
+        upload_folder = os.path.join("static", "categories")
+        os.makedirs(upload_folder, exist_ok=True)
+        file_path = os.path.join(upload_folder, filename)
+        with open(file_path, "wb") as f:
+            f.write(await image.read())
+        image_url = f"/static/categories/{filename}"
+
+    category_in = CategoryCreate(
+        name=name,
+        description=description,
+        image_url=image_url
+    )
+    new_category = create_category(db, category_in)
     return new_category
 
 
 # ✅ Update category (protected)
 @router.put("/{category_id}", response_model=CategoryResponse)
-def edit_category(
+async def edit_category(
     category_id: int,
-    category_data: CategoryUpdate,
+    name: str = Form(None),
+    description: str = Form(None),
+    image: UploadFile = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    updated = update_category(db, category_id, category_data)
+    category_data = {}
+    if name is not None:
+        category_data["name"] = name
+    if description is not None:
+        category_data["description"] = description
+
+    image_url = None
+    if image:
+        ext = os.path.splitext(image.filename)[-1]
+        filename = f"{uuid4().hex}{ext}"
+        upload_folder = os.path.join("static", "categories")
+        os.makedirs(upload_folder, exist_ok=True)
+        file_path = os.path.join(upload_folder, filename)
+        with open(file_path, "wb") as f:
+            f.write(await image.read())
+        image_url = f"/static/categories/{filename}"
+        category_data["image_url"] = image_url
+
+    updated = update_category(db, category_id, CategoryUpdate(**category_data))
     if not updated: 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found"
         )
     return updated
-
 
 # ✅ Delete category (protected)
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)

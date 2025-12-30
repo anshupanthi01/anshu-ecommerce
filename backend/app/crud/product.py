@@ -12,6 +12,7 @@ def create_product(db: Session, product:  ProductCreate) -> Product:
         stock=product.stock,
         sku=product.sku,
         category_id=product.category_id,
+        image_url=product.image_url
     )
     db.add(db_product)
     db.commit()

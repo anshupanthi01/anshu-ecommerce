@@ -9,6 +9,7 @@ def create_category(db: Session, category: CategoryCreate) -> Category:
     db_category = Category(
         name=category.name,
         description=category.description,
+        image_url=category.image_url
     )
     db.add(db_category)
     db.commit()

@@ -14,6 +14,7 @@ class Product(Base):
     stock = Column(Integer, default=0, nullable=False)
     sku = Column(String(100), unique=True, nullable=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    image_url = Column(String, nullable=True)
 
     is_active = Column(Integer, default=1, nullable=False)
     

@@ -6,6 +6,7 @@ from decimal import Decimal
 class CategoryBase(BaseModel):
     name: str = Field(... , min_length=1, max_length=255)
     description: Optional[str] = None
+    image_url: Optional[str] = None
 
 class CategoryCreate(CategoryBase):
     pass
@@ -13,12 +14,14 @@ class CategoryCreate(CategoryBase):
 class CategoryUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class CategoryResponse(CategoryBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    image_url: Optional[str] = None
 
     class Config: 
         from_attributes = True

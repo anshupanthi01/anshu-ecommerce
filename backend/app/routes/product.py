@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from fastapi import UploadFile, File, Form
+import os
+from uuid import uuid4
 from app.database import get_db
 from app.models import User
 from app.schemas import ProductCreate, ProductUpdate, ProductResponse, ProductWithCategory
@@ -53,23 +56,65 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 
 # ✅ Create product (protected)
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
-def add_product(
-    product: ProductCreate,
-    current_user:User = Depends(get_current_user),
+# def add_product(
+#     product: ProductCreate,
+#     current_user:User = Depends(get_current_user),
+#     db: Session = Depends(get_db)
+# ):
+#     # Check if SKU exists
+#     if product.sku:
+#         existing = get_product_by_sku(db, product.sku)
+#         if existing: 
+#             raise HTTPException(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 detail="Product SKU already exists"
+#             )
+    
+#     new_product = create_product(db, product)
+#     return new_product
+async def add_product(
+    name: str = Form(...),
+    description: str = Form(""),
+    price: float = Form(...),
+    sku: str = Form(None),
+    category_id: int = Form(...),
+    stock: int = Form(...),
+    image: UploadFile = File(None),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     # Check if SKU exists
-    if product.sku:
-        existing = get_product_by_sku(db, product.sku)
-        if existing: 
+    if sku:
+        existing = get_product_by_sku(db, sku)
+        if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Product SKU already exists"
             )
-    
-    new_product = create_product(db, product)
-    return new_product
 
+    image_url = None
+    if image:
+        ext = os.path.splitext(image.filename)[-1]
+        filename = f"{uuid4().hex}{ext}"
+        upload_folder = os.path.join("static", "products")
+        os.makedirs(upload_folder, exist_ok=True)
+        file_path = os.path.join(upload_folder, filename)
+        with open(file_path, "wb") as f:
+            f.write(await image.read())
+        image_url = f"/static/products/{filename}"
+
+    # Build ProductCreate object as your current create_product expects
+    product_in = ProductCreate(
+        name=name,
+        description=description,
+        price=price,
+        sku=sku,
+        category_id=category_id,
+        stock=stock,
+        image_url=image_url
+    )
+    new_product = create_product(db, product_in)
+    return new_product
 
 # ✅ Update product (protected)
 @router.put("/{product_id}", response_model=ProductResponse)
