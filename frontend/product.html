@@ -1,139 +1,161 @@
-<!-- product.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Product | Glow Fashion</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
-  <script type="module" src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Glam</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .product-detail-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            background: var(--glass-bg);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .detail-image {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .detail-info h1 {
+            font-size: 2.5rem;
+            color: var(--dark-pink);
+            margin-bottom: 1rem;
+        }
+
+        .detail-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            margin-bottom: 2rem;
+        }
+
+        .detail-desc {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 2rem;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quantity-selector button {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+
+        .quantity-selector input {
+            width: 50px;
+            text-align: center;
+            padding: 0.2rem;
+            border: 1px solid #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="navbar">
-      <span class="logo">Glow</span>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="products.html">Shop</a>
-        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
-        <a href="cart.html" id="nav-cart">Cart</a>
-        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
-        <a href="login.html" id="nav-login">Login</a>
-        <a href="register.html" id="nav-register">Register</a>
-        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
-      </nav>
-    </div>
-  </header>
-  <section>
-    <div id="product-container"></div>
-    <div id="product-loader"></div>
-  </section>
-  <footer>
-    <div class="footer-links">
-      <a href="products.html">Shop</a>
-      <a href="orders.html">Orders</a>
-      <a href="profile.html">Profile</a>
-      <a href="cart.html">Cart</a>
-    </div>
-    <div class="contact-info">
-      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
-    </div>
-    <div style="margin-top:0.4em; color:#af3f72;">
-      &copy; 2025 Glow. All rights reserved.
-    </div>
-  </footer>
-  <script type="module">
-    import {apiRequest, isLoggedIn, showUserNav, requireLogin, showLoader, hideLoader, showError, showSuccess} from './app.js';
+    <nav id="navbar" class="navbar"></nav>
 
-    function getQueryParam(param) {
-      const url = new URL(window.location);
-      return url.searchParams.get(param);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      showUserNav();
-      loadProduct();
-    });
-
-    async function loadProduct() {
-      const id = getQueryParam('id');
-      if (!id) {
-        document.getElementById('product-container').innerHTML = "<div class='error-message'>No product selected.</div>";
-        return;
-      }
-      showLoader('product-loader');
-      try {
-        const prod = await apiRequest(`/products/${id}`,'GET');
-        renderProduct(prod);
-      } catch (err) {
-        document.getElementById('product-container').innerHTML = "<div class='error-message'>Product not found.</div>";
-      }
-      hideLoader('product-loader');
-    }
-
-    function renderProduct(product) {
-  document.title = product.name + ' | Glow Fashion';
-  document.getElementById('product-container').innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:2em;">
-      <div style="min-width:260px;flex:1;">
-        <div class="img-container" style="min-width:240px;min-height:260px">
-          <img src="${product.image_url ? 'http://localhost:8000' + product.image_url : 'placeholder-product.png'}"
-               alt="Product image" style="max-width:90%;"/>
+    <div class="container">
+        <div id="product-details" class="product-detail-container">
+            <div style="grid-column: 1/-1; text-align: center;">Loading product details...</div>
         </div>
-      </div>
-      <div style="flex:2;min-width:250px;">
-        <h2 style="margin:0 0 0.3em 0;">${product.name}</h2>
-        <div class="prod-price" style="font-size:1.2em;">&#8377;${product.price}</div>
-        <div style="color:#ea4c89; font-size:1.05em; font-weight:600; margin:0.7em 0;">
-          ${product.stock ? product.stock+" in stock" : "<span style='color:#bbb;'>Out of stock</span>"}
-        </div>
-        <div style="margin-bottom:0.6em;">${product.description||""}</div>
-        <div id="variant-selectors" style="margin-bottom:1.2em;">
-          <!-- For demo: static variant selectors! -->
-          <label>Size: 
-            <select style="margin-right:1.3em;">
-              <option>S</option><option>M</option><option>L</option><option>XL</option>
-            </select>
-          </label>
-          <label>Color:
-            <select>
-              <option>Pink</option><option>White</option><option>Black</option>
-            </select>
-          </label>
-        </div>
-        <button class="btn" id="add-to-cart-btn" ${!product.stock ? "disabled" : ""}>Add to Cart</button>
-        <div id="add-to-cart-msg" style="margin-top:0.5em;"></div>
-        <hr style="margin:2em 0 0.6em 0;">
-        <h3>Customer Reviews</h3>
-        <div>
-          <!-- Static/fake reviews for now -->
-          <div style="background:#fff6f9;border-radius:7px;padding:0.8em;margin-bottom:0.7em;">
-            <span style="font-weight:600;font-size:1.05em;">Priya S.</span> &nbsp;
-            <span style="color:#ffc107;">★★★★★</span>
-            <div>"Very stylish and good fabric, I loved the color!"</div>
-          </div>
-          <div style="background:#fff6f9;border-radius:7px;padding:0.7em;">
-            <span style="font-weight:600;font-size:1.05em;">Ayesha K.</span> &nbsp;
-            <span style="color:#ffc107;">★★★★☆</span>
-            <div>"Fitting is proper and quality is excellent for the price!"</div>
-          </div>
-        </div>
-      </div>
     </div>
-  `;
-  document.getElementById('add-to-cart-btn').onclick = () => handleAddToCart(product.id);
-}
 
-    async function handleAddToCart(productId) {
-      if (!isLoggedIn()) { window.location.href = "login.html"; return; }
-      try {
-        await apiRequest('/cart/items','POST',{product_id: productId, quantity: 1}, true);
-        showSuccess('add-to-cart-msg',"Added to cart!");
-      } catch (err) {
-        showError('add-to-cart-msg', err.message || "Failed to add to cart");
-      }
-    }
-  </script>
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Load footer
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        async function loadProductDetails() {
+            const container = document.getElementById('product-details');
+            
+            if (!productId) {
+                container.innerHTML = '<p>Product not found.</p>';
+                return;
+            }
+
+            try {
+                // Use /api/products/ endpoint
+                const product = await api.get(`/api/products/${productId}`);
+                
+                document.title = `${product.name} - Glam`;
+                
+                container.innerHTML = `
+                    <div>
+                        <img src="${product.image_url ? 'http://localhost:8000' + product.image_url : 'https://via.placeholder.com/500'}" alt="${product.name}" class="detail-image">
+                    </div>
+                    <div class="detail-info">
+                        <h1>${product.name}</h1>
+                        <div class="detail-price">${ui.formatPrice(product.price)}</div>
+                        <p class="detail-desc">${product.description || 'No description available.'}</p>
+                        
+                        <p style="margin-bottom: 1rem; color: #666;">Stock: ${product.stock > 0 ? product.stock : 'Out of Stock'}</p>
+
+                        <div class="add-to-cart-section">
+                            <div class="quantity-selector">
+                                <button onclick="updateQuantity(-1)">-</button>
+                                <input type="number" id="quantity" value="1" min="1" max="${product.stock}" readonly>
+                                <button onclick="updateQuantity(1)">+</button>
+                            </div>
+                            <button onclick="addToCart(${product.id})" class="btn btn-primary" ${product.stock === 0 ? 'disabled' : ''} style="width: 100%; padding: 1rem;">
+                                ${product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `<p style="color: red">Error loading product: ${error.message}</p>`;
+            }
+        }
+
+        function updateQuantity(change) {
+            const input = document.getElementById('quantity');
+            let newVal = parseInt(input.value) + change;
+            const maxStock = parseInt(input.max);
+            if (newVal < 1) newVal = 1;
+            if (newVal > maxStock) newVal = maxStock;
+            input.value = newVal;
+        }
+
+        async function addToCart(id) {
+            const quantity = parseInt(document.getElementById('quantity').value);
+            // Use cart.add instead of cart.addItem
+            await cart.add(id, quantity);
+        }
+
+        loadProductDetails();
+    </script>
 </body>
 </html>

@@ -1,19 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from fastapi import UploadFile, File, Form
 import os
 from uuid import uuid4
 from app.database import get_db
 from app.models import User
-from app.schemas import ProductCreate, ProductUpdate, ProductResponse, ProductWithCategory
+from app.schemas import ProductCreate, ProductUpdate, ProductResponse
 from app.crud import (
     create_product,
     get_product_by_id,
     get_product_by_sku,
-    get_all_products,
-    get_products_by_category,
-    search_products,
+    get_filtered_products,
     update_product,
     delete_product,
 )
@@ -30,14 +27,19 @@ def list_products(
     limit: int = 100,
     category_id: Optional[int] = None,
     search: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
-    if search:
-        products = search_products(db, search, skip=skip, limit=limit)
-    elif category_id: 
-        products = get_products_by_category(db, category_id, skip=skip, limit=limit)
-    else: 
-        products = get_all_products(db, skip=skip, limit=limit)
+    products = get_filtered_products(
+        db, 
+        skip=skip, 
+        limit=limit, 
+        category_id=category_id, 
+        search=search,
+        min_price=min_price,
+        max_price=max_price
+    )
     
     return products
 
@@ -56,22 +58,6 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 
 # ✅ Create product (protected)
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
-# def add_product(
-#     product: ProductCreate,
-#     current_user:User = Depends(get_current_user),
-#     db: Session = Depends(get_db)
-# ):
-#     # Check if SKU exists
-#     if product.sku:
-#         existing = get_product_by_sku(db, product.sku)
-#         if existing: 
-#             raise HTTPException(
-#                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail="Product SKU already exists"
-#             )
-    
-#     new_product = create_product(db, product)
-#     return new_product
 async def add_product(
     name: str = Form(...),
     description: str = Form(""),

@@ -1,77 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Register | Glow Fashion</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
-  <script type="module" src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Glam</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <div class="navbar">
-      <span class="logo">Glow</span>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="products.html">Shop</a>
-        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
-        <a href="cart.html" id="nav-cart">Cart</a>
-        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
-        <a href="login.html" id="nav-login">Login</a>
-        <a href="register.html" class="active" id="nav-register">Register</a>
-        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
-      </nav>
-    </div>
-  </header>
+    <nav id="navbar" class="navbar"></nav>
 
-  <form id="register-form">
-    <div class="form-title">Create Your Glow Account</div>
-    <div id="register-error"></div>
-    <input type="text" id="first_name" placeholder="First Name" required>
-    <input type="text" id="last_name" placeholder="Last Name" required>
-    <input type="email" id="email" placeholder="Email address" required autocomplete="username">
-    <input type="password" id="password" placeholder="Password (min 6 chars)" required autocomplete="new-password" minlength="6">
-    <button type="submit" class="btn btn-block">Register</button>
-    <a href="login.html" style="margin:0.3em auto;display:block;font-size:0.98em;">Already have an account? Login</a>
-  </form>
+    <div class="auth-container">
+        <h2>Join Us 🎀</h2>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" required placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Choose a password">
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" required placeholder="Confirm your password">
+            </div>
+            <!-- Add other fields if required by backend, e.g. full_name, address -->
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" required placeholder="First Name">
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" required placeholder="Last Name">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create Account</button>
+        </form>
+        <p style="margin-top: 1.5rem; font-size: 0.9rem;">
+            Already have an account? <a href="login.html" style="color: var(--dark-pink); font-weight: 600;">Login here</a>
+        </p>
+    </div>
 
-  <footer>
-    <div class="footer-links">
-      <a href="products.html">Shop</a>
-      <a href="orders.html">Orders</a>
-      <a href="profile.html">Profile</a>
-      <a href="cart.html">Cart</a>
-    </div>
-    <div class="contact-info">
-      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
-    </div>
-    <div style="margin-top:0.4em; color:#af3f72;">
-      &copy; 2025 Glow. All rights reserved.
-    </div>
-  </footer>
+    <div id="footer-container"></div>
 
-  <script type="module">
-    import { register, showError, showSuccess, clearMessage, showUserNav, isLoggedIn } from './app.js';
-    document.addEventListener('DOMContentLoaded', () => {
-      showUserNav();
-      if (isLoggedIn()) { window.location.href = "index.html"; }
-      document.getElementById('register-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        clearMessage('register-error');
-        const first_name = document.getElementById('first_name').value.trim();
-        const last_name = document.getElementById('last_name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        try {
-          await register({ first_name, last_name, email, password });
-          showSuccess('register-error',"Registration successful! Please login.");
-          setTimeout(()=>window.location.href="login.html",1200);
-        } catch (err) {
-          showError('register-error', err.message || "Registration failed.");
-        }
-      });
-    });
-  </script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Load footer
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const firstName = document.getElementById('first_name').value;
+            const lastName = document.getElementById('last_name').value;
+            const btn = e.target.querySelector('button');
+
+            if (password !== confirmPassword) {
+                ui.showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                btn.textContent = 'Creating Account...';
+                btn.disabled = true;
+                
+                await auth.register({
+                    email: email,
+                    password: password,
+                    first_name: firstName,
+                    last_name: lastName,
+                    address: "Default Address",
+                    phone: "0000000000"
+                });
+                
+                ui.showToast('Registration successful! Please login.', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } catch (error) {
+                ui.showToast(error.message, 'error');
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
