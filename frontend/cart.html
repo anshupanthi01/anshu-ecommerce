@@ -1,0 +1,134 @@
+<!-- cart.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cart | Glow Fashion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <span class="logo">Glow</span>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="products.html">Shop</a>
+        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
+        <a href="cart.html" class="active" id="nav-cart">Cart</a>
+        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
+        <a href="login.html" id="nav-login">Login</a>
+        <a href="register.html" id="nav-register">Register</a>
+        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+      </nav>
+    </div>
+  </header>
+  <section>
+    <h2>Shopping Cart</h2>
+    <div id="cart-msg"></div>
+    <div id="cart-list"></div>
+    <div id="cart-loader"></div>
+    <div id="cart-total" class="text-center mt-2"></div>
+    <div style="margin-top:2em;text-align:center;">
+      <button class="btn" id="checkout-btn" style="display:none;">Proceed to Checkout</button>
+    </div>
+  </section>
+  <footer>
+    <div class="footer-links">
+      <a href="products.html">Shop</a>
+      <a href="orders.html">Orders</a>
+      <a href="profile.html">Profile</a>
+      <a href="cart.html">Cart</a>
+    </div>
+    <div class="contact-info">
+      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
+    </div>
+    <div style="margin-top:0.4em; color:#af3f72;">&copy; 2025 Glow. All rights reserved.</div>
+  </footer>
+  <script type="module">
+    import { apiRequest, requireLogin, showUserNav, showLoader, hideLoader, showError, showSuccess } from './app.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireLogin();
+      showUserNav();
+      loadCart();
+      document.getElementById('checkout-btn').onclick = ()=>window.location='checkout.html';
+    });
+
+    async function loadCart() {
+      showLoader('cart-loader');
+      try {
+        const cart = await apiRequest('/cart/', 'GET', null, true);
+        if (!cart.items || !cart.items.length) {
+          document.getElementById('cart-list').innerHTML =
+            "<div class='error-message'>Your cart is empty. <a href='products.html'>Continue shopping</a></div>";
+          document.getElementById('cart-total').innerHTML = '';
+          document.getElementById('checkout-btn').style.display = 'none';
+        } else {
+          document.getElementById('cart-list').innerHTML =
+            cart.items.map(item => cartItemHTML(item)).join('');
+          document.getElementById('cart-total').innerHTML =
+            `<span style="font-weight:600;">Total: &#8377;${cart.total_amount}</span>`;
+          document.getElementById('checkout-btn').style.display = '';
+          setupCartQtyListeners();
+          setupRemoveListeners();
+        }
+      } catch (err) {
+        showError('cart-msg', err.message || "Failed to load cart.");
+      }
+      hideLoader('cart-loader');
+    }
+
+    function cartItemHTML(item) {
+      return `
+        <div style="display:flex;align-items:center;gap:1em;padding:0.8em 0;border-bottom:1px solid #f0cbd8;">
+          <img src="placeholder-product.png" alt="product" style="height:56px;width:56px;border-radius:8px;">
+          <div style="flex:1;">
+            <span style="font-weight:600;">${item.product.name}</span>
+            <div style="color:#ea4c89;">&#8377;${item.product.price}</div>
+            <div>In Stock: ${item.product.stock}</div>
+          </div>
+          <div>
+            Qty:
+            <input type="number" min="1" max="${item.product.stock||99}" value="${item.quantity}"
+              class="cart-qty-input" data-itemid="${item.id}" style="width:48px;text-align:center;">
+          </div>
+          <button class="btn" style="padding:0.3em 1em;" data-removeid="${item.id}">Remove</button>
+        </div>
+      `;
+    }
+
+    function setupCartQtyListeners() {
+      document.querySelectorAll('.cart-qty-input').forEach(input => {
+        input.onchange = async function() {
+          const id = this.dataset.itemid;
+          const qty = parseInt(this.value) || 1;
+          try {
+            await apiRequest(`/cart/items/${id}`,'PUT',{quantity: qty},true);
+            showSuccess('cart-msg',"Quantity updated!");
+            loadCart();
+          } catch (err) {
+            showError('cart-msg', err.message || "Update failed"); loadCart();
+          }
+        };
+      });
+    }
+    function setupRemoveListeners() {
+      document.querySelectorAll('button[data-removeid]').forEach(btn => {
+        btn.onclick = async function() {
+          const id = this.dataset.removeid;
+          try {
+            await apiRequest(`/cart/items/${id}`,'DELETE',null,true);
+            showSuccess('cart-msg',"Item removed!");
+            loadCart();
+          } catch (err) {
+            showError('cart-msg', err.message || "Remove failed"); loadCart();
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

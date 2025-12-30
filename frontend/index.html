@@ -1,0 +1,146 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Glow Fashion | Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <!-- Poppins font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <span class="logo">Glow</span>
+      <nav>
+        <a href="index.html" class="active">Home</a>
+        <a href="products.html" id="nav-products">Shop</a>
+        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
+        <a href="cart.html" id="nav-cart">Cart</a>
+        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
+        <a href="login.html" id="nav-login">Login</a>
+        <a href="register.html" id="nav-register">Register</a>
+        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Glow</h1>
+    <p>Fashion that lets you shine. Discover clothing, shoes, accessories, and makeup curated for your glow!</p>
+  </section>
+
+  <section>
+    <h2 style="text-align:center;">Shop by Category</h2>
+    <div id="categories-list" class="product-grid" style="margin-bottom:2.7em;"></div>
+  </section>
+
+  <section>
+    <h2 style="text-align:center;">Featured Products</h2>
+    <div id="featured-products" class="product-grid"></div>
+    <div id="home-products-loader"></div>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="products.html">Shop</a>
+      <a href="orders.html">Orders</a>
+      <a href="profile.html">Profile</a>
+      <a href="cart.html">Cart</a>
+    </div>
+    <div class="contact-info">
+      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
+    </div>
+    <div style="margin-top:0.4em; color:#af3f72;">
+      &copy; 2025 Glow. All rights reserved.
+    </div>
+  </footer>
+
+  <script type="module">
+    import {
+      apiRequest, isLoggedIn, showUserNav, logout, showLoader, hideLoader
+    } from './app.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showUserNav();
+      // Show 'Orders'/'Profile'/'Logout' only if user is logged in
+      if (isLoggedIn()) {
+        document.getElementById('nav-orders').style.display = '';
+        document.getElementById('nav-user').style.display = '';
+        document.getElementById('nav-login').style.display = 'none';
+        document.getElementById('nav-register').style.display = 'none';
+        document.getElementById('nav-logout').style.display = '';
+      } else {
+        document.getElementById('nav-orders').style.display = 'none';
+        document.getElementById('nav-user').style.display = 'none';
+        document.getElementById('nav-login').style.display = '';
+        document.getElementById('nav-register').style.display = '';
+        document.getElementById('nav-logout').style.display = 'none';
+      }
+      loadCategories();
+      loadFeaturedProducts();
+    });
+
+    async function loadCategories() {
+      const categoriesDiv = document.getElementById('categories-list');
+      categoriesDiv.innerHTML = '';
+      try {
+        const cats = await apiRequest('/categories/', 'GET');
+        if (!cats || cats.length === 0) {
+          categoriesDiv.innerHTML = "<div>No categories found.</div>";
+          return;
+        }
+        categoriesDiv.innerHTML = cats.map(cat => `
+          <div class="product-card" style="min-height:unset;cursor:pointer;" onclick="window.location='products.html?category=${cat.id}'">
+            <div class="img-container" style="background:#fce0eb;">
+              <img src="placeholder-category.png" alt="Category" style="height:64px;width:64px;object-fit:contain;" />
+            </div>
+            <div class="prod-details" style="align-items:center;">
+              <span class="prod-name" style="margin-bottom:0;">${cat.name}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        categoriesDiv.innerHTML = "<div class='error-message'>Could not load categories.</div>";
+      }
+    }
+
+    async function loadFeaturedProducts() {
+      showLoader('home-products-loader');
+      const productsDiv = document.getElementById('featured-products');
+      productsDiv.innerHTML = '';
+      try {
+        // We just show the first 4 products as featured for this demo
+        let res = await apiRequest('/products/?skip=0&limit=4', 'GET');
+        if (!res || res.length === 0) {
+          productsDiv.innerHTML = '<div>No featured products available.</div>';
+          hideLoader('home-products-loader');
+          return;
+        }
+        productsDiv.innerHTML = res.map(prod => productCardHTML(prod)).join('');
+      } catch (err) {
+        productsDiv.innerHTML = "<div class='error-message'>Could not load featured products.</div>";
+      }
+      hideLoader('home-products-loader');
+    }
+
+    function productCardHTML(product) {
+      return `
+        <div class="product-card">
+          <div class="img-container">
+            <img src="placeholder-product.png" alt="Product image" />
+          </div>
+          <div class="prod-details">
+            <span class="prod-name">${product.name}</span>
+            <div class="prod-desc">${product.description ? product.description : ""}</div>
+            <span class="prod-price">&#8377;${product.price}</span>
+            <button class="btn btn-block" onclick="window.location='product.html?id=${product.id}'">View</button>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

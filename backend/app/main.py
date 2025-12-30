@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import init_db
-
 from app.config import settings
 print("CURRENT SECRET_KEY:", settings.SECRET_KEY)
 
@@ -15,6 +14,7 @@ from app.routes import (
     order_router,
 )
 
+from fastapi.middleware.cors import CORSMiddleware
 
 # ✅ Lifespan event (recommended way in FastAPI)
 @asynccontextmanager
@@ -27,7 +27,6 @@ async def lifespan(app: FastAPI):
     # 🛑 Shutdown:  Cleanup (if needed)
     print("👋 Shutting down...")
 
-
 # ✅ Create FastAPI app with lifespan
 app = FastAPI(
     title="E-Commerce API",
@@ -36,18 +35,24 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# ✅ Add CORS middleware AFTER the app is created!
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],           # For local dev, allow everything. Use only your frontend's domain in production!
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ✅ Root endpoint
 @app.get("/")
 def root():
     return {"message": "Welcome to E-Commerce API!  🛒"}
 
-
 # ✅ Health check endpoint
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "database":  "connected"}
-
 
 # ----------------------------------------
 # 📦 Include all routers

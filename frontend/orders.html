@@ -1,0 +1,93 @@
+<!-- orders.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orders | Glow Fashion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <span class="logo">Glow</span>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="products.html">Shop</a>
+        <a href="orders.html" class="active" id="nav-orders">Orders</a>
+        <a href="cart.html" id="nav-cart">Cart</a>
+        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
+        <a href="login.html" id="nav-login">Login</a>
+        <a href="register.html" id="nav-register">Register</a>
+        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+      </nav>
+    </div>
+  </header>
+  <section>
+    <h2>Order History</h2>
+    <div id="orders-list"></div>
+    <div id="orders-loader"></div>
+    <div id="orders-msg"></div>
+  </section>
+  <footer>
+    <div class="footer-links">
+      <a href="products.html">Shop</a>
+      <a href="orders.html">Orders</a>
+      <a href="profile.html">Profile</a>
+      <a href="cart.html">Cart</a>
+    </div>
+    <div class="contact-info">
+      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
+    </div>
+    <div style="margin-top:0.4em; color:#af3f72;">&copy; 2025 Glow. All rights reserved.</div>
+  </footer>
+  <script type="module">
+    import { apiRequest, requireLogin, showUserNav, showLoader, hideLoader, showError, showSuccess } from './app.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireLogin();
+      showUserNav();
+      loadOrders();
+    });
+
+    async function loadOrders() {
+      showLoader('orders-loader');
+      try {
+        let orders = await apiRequest('/orders/','GET',null,true);
+        if (!orders.length) {
+          document.getElementById('orders-list').innerHTML = "<div class='error-message'>No orders yet.</div>";
+        } else {
+          document.getElementById('orders-list').innerHTML = orders.map(orderHTML).join('');
+        }
+      } catch (err) {
+        showError('orders-msg', err.message || "Failed to load orders.");
+      }
+      hideLoader('orders-loader');
+    }
+
+    function orderHTML(order) {
+      return `
+        <div style="background:#fffafc;border-radius:9px;padding:1.2em;margin-bottom:1.2em;box-shadow:0 1.5px 5px #f8d8e4;">
+          <div><b>Order #${order.id}</b> • Total: &#8377;${order.total_amount} • Date: ${new Date(order.order_date).toLocaleDateString()}</div>
+          <div>Status: <span style="color:${order.status==='delivered'?'#1e9955':'#b16e1e'};">${order.status}</span></div>
+          <button class="btn" style="padding:0.3em 1em;margin-top:0.8em;" onclick="window.location='order-view.html?id=${order.id}'">View Details</button>
+          ${order.status==='pending'?`<button class="btn" style="padding:0.3em 1em;background:#c71c46;margin-left:1em;color:#fff;" onclick="cancelOrder(${order.id});">Cancel</button>`:""}
+        </div>
+      `;
+    }
+
+    window.cancelOrder = async function(id) {
+      if (!confirm("Cancel this order?")) return;
+      try {
+        await apiRequest(`/orders/${id}/cancel`,'PUT',null,true);
+        showSuccess('orders-msg',"Order cancelled.");
+        loadOrders();
+      } catch (err) {
+        showError('orders-msg', err.message || "Failed to cancel order.");
+      }
+    };
+  </script>
+</body>
+</html>

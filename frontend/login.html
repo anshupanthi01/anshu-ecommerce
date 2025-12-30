@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | Glow Fashion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <span class="logo">Glow</span>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="products.html">Shop</a>
+        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
+        <a href="cart.html" id="nav-cart">Cart</a>
+        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
+        <a href="login.html" class="active" id="nav-login">Login</a>
+        <a href="register.html" id="nav-register">Register</a>
+        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <form id="login-form">
+    <div class="form-title">Sign In to Glow</div>
+    <div id="login-error"></div>
+    <input type="email" id="email" placeholder="Email address" required autocomplete="username">
+    <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+    <button type="submit" class="btn btn-block">Login</button>
+    <a href="register.html" style="margin:0.3em auto;display:block;font-size:0.98em;">Don't have an account? Register</a>
+  </form>
+
+  <footer>
+    <div class="footer-links">
+      <a href="products.html">Shop</a>
+      <a href="orders.html">Orders</a>
+      <a href="profile.html">Profile</a>
+      <a href="cart.html">Cart</a>
+    </div>
+    <div class="contact-info">
+      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
+    </div>
+    <div style="margin-top:0.4em; color:#af3f72;">
+      &copy; 2025 Glow. All rights reserved.
+    </div>
+  </footer>
+
+  <script type="module">
+    import {login, saveToken, showError, clearMessage, showUserNav, isLoggedIn} from './app.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showUserNav();
+      if (isLoggedIn()) { window.location.href = "index.html"; }
+      document.getElementById('login-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearMessage('login-error');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+          const res = await login(email, password);
+          saveToken(res.access_token);
+          window.location.href = "index.html";
+        } catch (err) {
+          showError('login-error', err.message || "Login failed.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shop | Glow Fashion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <span class="logo">Glow</span>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="products.html" class="active">Shop</a>
+        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
+        <a href="cart.html" id="nav-cart">Cart</a>
+        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
+        <a href="login.html" id="nav-login">Login</a>
+        <a href="register.html" id="nav-register">Register</a>
+        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <section>
+    <h2 style="text-align:center;">Shop All Products</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:1.4em;align-items:center;justify-content:space-between;margin:1em 0 2em 0;">
+      <div>
+        <select id="category-filter">
+          <option value="">All Categories</option>
+        </select>
+        <input type="number" id="price-min" placeholder="Min ₹" min="0" style="width:70px;">
+        <input type="number" id="price-max" placeholder="Max ₹" min="0" style="width:70px;">
+        <button id="apply-filters" class="btn" style="padding:0.3em 1em;">Filter</button>
+      </div>
+      <input type="text" id="search-term" placeholder="Search products..." style="min-width:210px;">
+      <div>
+        <select id="sort-order">
+          <option value="">Sort</option>
+          <option value="price-asc">Price: Low-High</option>
+          <option value="price-desc">Price: High-Low</option>
+        </select>
+      </div>
+    </div>
+    <div id="products-list" class="product-grid"></div>
+    <div id="products-pagination" class="text-center" style="margin:2em 0;"></div>
+    <div id="products-loader"></div>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="products.html">Shop</a>
+      <a href="orders.html">Orders</a>
+      <a href="profile.html">Profile</a>
+      <a href="cart.html">Cart</a>
+    </div>
+    <div class="contact-info">
+      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
+    </div>
+    <div style="margin-top:0.4em; color:#af3f72;">
+      &copy; 2025 Glow. All rights reserved.
+    </div>
+  </footer>
+
+  <script type="module">
+    import { apiRequest, showUserNav } from './app.js';
+    let currentPage = 1;
+    const perPage = 12;
+    let totalProducts = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showUserNav();
+      loadCategories();
+      loadProducts();
+      setupFilterEvents();
+    });
+
+    function setupFilterEvents() {
+      document.getElementById('apply-filters').onclick = (e) => {
+        currentPage = 1;
+        loadProducts();
+      };
+      document.getElementById('sort-order').onchange = () => {
+        currentPage = 1;
+        loadProducts();
+      };
+      document.getElementById('search-term').onkeydown = (e) => {
+        if (e.key === "Enter") { loadProducts(); }
+      };
+    }
+
+    async function loadCategories() {
+      try {
+        let cats = await apiRequest('/categories/');
+        let catSel = document.getElementById('category-filter');
+        catSel.innerHTML = `<option value="">All Categories</option>` + cats.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+        // Check URL param for preselected filter
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('category')) {
+          catSel.value = params.get('category');
+        }
+      } catch {}
+    }
+
+    async function loadProducts() {
+      document.getElementById('products-list').innerHTML = '';
+      document.getElementById('products-loader').innerHTML = '<div class="loader"></div>';
+      // Collect filters
+      const params = [];
+      const cat = document.getElementById('category-filter').value;
+      if (cat) params.push('category_id='+cat);
+      // Price filter (frontend-only after result for now)
+      const min = parseFloat(document.getElementById('price-min').value) || null;
+      const max = parseFloat(document.getElementById('price-max').value) || null;
+      const search = document.getElementById('search-term').value.trim();
+      if (search) params.push('search='+encodeURIComponent(search));
+      params.push('skip=' + ((currentPage - 1) * perPage), 'limit=' + perPage);
+
+      let url = '/products/?' + params.join('&');
+      try {
+        let products = await apiRequest(url, 'GET');
+        // client-side price filtering for now
+        if (min !== null) products = products.filter(p=>+p.price >= min);
+        if (max !== null) products = products.filter(p=>+p.price <= max);
+        // Sorting
+        const sort = document.getElementById('sort-order').value;
+        if (sort === 'price-asc') products.sort((a,b)=>+a.price - +b.price);
+        if (sort === 'price-desc') products.sort((a,b)=>+b.price - +a.price);
+
+        if (!products.length) {
+          document.getElementById('products-list').innerHTML = '<div>No products found.</div>';
+          document.getElementById('products-pagination').innerHTML = '';
+        } else {
+          document.getElementById('products-list').innerHTML = products.map(productCardHTML).join('');
+          // See if we need pagination: your backend limits/pages, so we'll just guess presence of "next page" by length
+          renderPagination(products.length === perPage);
+        }
+      } catch (err) {
+        document.getElementById('products-list').innerHTML = "<div class='error-message'>Could not load products.</div>";
+        document.getElementById('products-pagination').innerHTML = '';
+      }
+      document.getElementById('products-loader').innerHTML = '';
+    }
+
+    function renderPagination(hasNext) {
+      let html = '';
+      if (currentPage > 1) html += `<button class="btn" id="prev-page">Prev</button>&nbsp;`;
+      html += `<span>Page ${currentPage}</span>`;
+      if (hasNext) html += `&nbsp;<button class="btn" id="next-page">Next</button>`;
+      document.getElementById('products-pagination').innerHTML = html;
+      if (currentPage > 1) document.getElementById('prev-page').onclick = ()=>{ currentPage--; loadProducts(); };
+      if (hasNext) document.getElementById('next-page').onclick = ()=>{ currentPage++; loadProducts(); };
+    }
+
+    function productCardHTML(product) {
+      return `
+        <div class="product-card">
+          <div class="img-container">
+            <img src="placeholder-product.png" alt="Product image"/>
+          </div>
+          <div class="prod-details">
+            <span class="prod-name">${product.name}</span>
+            <div class="prod-desc">${product.description || ""}</div>
+            <span class="prod-price">&#8377;${product.price}</span>
+            <button class="btn btn-block" onclick="window.location='product.html?id=${product.id}'">View</button>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

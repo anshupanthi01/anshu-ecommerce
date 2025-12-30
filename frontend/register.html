@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register | Glow Fashion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <span class="logo">Glow</span>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="products.html">Shop</a>
+        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
+        <a href="cart.html" id="nav-cart">Cart</a>
+        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
+        <a href="login.html" id="nav-login">Login</a>
+        <a href="register.html" class="active" id="nav-register">Register</a>
+        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <form id="register-form">
+    <div class="form-title">Create Your Glow Account</div>
+    <div id="register-error"></div>
+    <input type="text" id="first_name" placeholder="First Name" required>
+    <input type="text" id="last_name" placeholder="Last Name" required>
+    <input type="email" id="email" placeholder="Email address" required autocomplete="username">
+    <input type="password" id="password" placeholder="Password (min 6 chars)" required autocomplete="new-password" minlength="6">
+    <button type="submit" class="btn btn-block">Register</button>
+    <a href="login.html" style="margin:0.3em auto;display:block;font-size:0.98em;">Already have an account? Login</a>
+  </form>
+
+  <footer>
+    <div class="footer-links">
+      <a href="products.html">Shop</a>
+      <a href="orders.html">Orders</a>
+      <a href="profile.html">Profile</a>
+      <a href="cart.html">Cart</a>
+    </div>
+    <div class="contact-info">
+      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
+    </div>
+    <div style="margin-top:0.4em; color:#af3f72;">
+      &copy; 2025 Glow. All rights reserved.
+    </div>
+  </footer>
+
+  <script type="module">
+    import { register, showError, showSuccess, clearMessage, showUserNav, isLoggedIn } from './app.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      showUserNav();
+      if (isLoggedIn()) { window.location.href = "index.html"; }
+      document.getElementById('register-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearMessage('register-error');
+        const first_name = document.getElementById('first_name').value.trim();
+        const last_name = document.getElementById('last_name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+          await register({ first_name, last_name, email, password });
+          showSuccess('register-error',"Registration successful! Please login.");
+          setTimeout(()=>window.location.href="login.html",1200);
+        } catch (err) {
+          showError('register-error', err.message || "Registration failed.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
