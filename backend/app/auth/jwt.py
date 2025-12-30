@@ -35,19 +35,43 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 # ✅ Verify and decode token
+# def verify_token(token: str) -> Optional[TokenData]:
+#     try:
+#         payload = jwt.decode(
+#             token, 
+#             settings.SECRET_KEY, 
+#             algorithms=[settings.ALGORITHM]
+#         )
+#         user_id: int = payload.get("sub")
+#         email: str = payload.get("email")
+        
+#         if user_id is None: 
+#             return None
+        
+#         return TokenData(user_id=user_id, email=email)
+#     except JWTError:
+#         return None
+
 def verify_token(token: str) -> Optional[TokenData]:
+    print("VERIFY TOKEN SECRET_KEY:", settings.SECRET_KEY)
     try:
         payload = jwt.decode(
             token, 
             settings.SECRET_KEY, 
             algorithms=[settings.ALGORITHM]
         )
-        user_id: int = payload.get("sub")
-        email: str = payload.get("email")
-        
-        if user_id is None: 
+        print("Decoded payload:", payload)
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        if user_id is None:
+            print("FAIL: No sub field in payload!", payload)
             return None
-        
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            print("FAIL: user_id not an int", user_id)
+            return None
         return TokenData(user_id=user_id, email=email)
-    except JWTError:
+    except JWTError as e:
+        print("JWT error:", e)
         return None

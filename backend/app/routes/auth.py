@@ -43,10 +43,13 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # DEBUG: Print secret key before token creation
+    print("LOGIN ROUTE SECRET_KEY:", settings.SECRET_KEY)
+
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email},
+        data={"sub": str(user.id), "email": user.email},
         expires_delta=access_token_expires
     )
     

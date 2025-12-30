@@ -12,24 +12,25 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 # ✅ Get current user from token
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate":  "Bearer"},
+        headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
+    print("Token Received:", token)
     token_data = verify_token(token)
-    if token_data is None: 
+    print("Token Data:", token_data)
+    if token_data is None:
         raise credentials_exception
-    
+
+    print(f"Querying user: User.id == {token_data.user_id!r} (type: {type(token_data.user_id)})")
     user = db.query(User).filter(User.id == token_data.user_id).first()
+    print("Queried User:", user)
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 

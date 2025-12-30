@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import init_db
 
+from app.config import settings
+print("CURRENT SECRET_KEY:", settings.SECRET_KEY)
+
 # ✅ Import all routers
 from app.routes import (
     auth_router,
