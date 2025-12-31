@@ -12,7 +12,6 @@ class OrderItem(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False)
     
-    # ✅ Change Float to Numeric for price fields
     unit_price = Column(Numeric(10, 2), nullable=False)  # Price at time of order
     subtotal = Column(Numeric(10, 2), nullable=False)    # quantity * unit_price
 
