@@ -1,93 +1,99 @@
-<!-- checkout.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Checkout | Glow Fashion</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
-  <script type="module" src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Glam</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <div class="navbar">
-      <span class="logo">Glow</span>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="products.html">Shop</a>
-        <a href="orders.html" id="nav-orders" style="display:none;">Orders</a>
-        <a href="cart.html" id="nav-cart">Cart</a>
-        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
-        <a href="login.html" id="nav-login">Login</a>
-        <a href="register.html" id="nav-register">Register</a>
-        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
-      </nav>
-    </div>
-  </header>
-  <section>
-    <h2>Checkout</h2>
-    <div id="checkout-content"></div>
-    <div id="checkout-msg"></div>
-  </section>
-  <footer>
-    <div class="footer-links">
-      <a href="products.html">Shop</a>
-      <a href="orders.html">Orders</a>
-      <a href="profile.html">Profile</a>
-      <a href="cart.html">Cart</a>
-    </div>
-    <div class="contact-info">
-      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
-    </div>
-    <div style="margin-top:0.4em; color:#af3f72;">&copy; 2025 Glow. All rights reserved.</div>
-  </footer>
-  <script type="module">
-    import { apiRequest, requireLogin, showUserNav, showError, showSuccess } from './app.js';
+    <nav id="navbar" class="navbar"></nav>
 
-    document.addEventListener('DOMContentLoaded', () => {
-      requireLogin();
-      showUserNav();
-      loadCheckout();
-    });
+    <div class="container">
+        <div class="auth-container" style="max-width: 600px;">
+            <h2>Checkout 💳</h2>
+            <div id="order-summary" style="margin-bottom: 2rem; text-align: left; background: rgba(255,255,255,0.5); padding: 1rem; border-radius: 10px;">
+                <!-- Summary loaded here -->
+            </div>
 
-    async function loadCheckout() {
-      try {
-        const cart = await apiRequest('/cart/', 'GET', null, true);
-        if (!cart.items || !cart.items.length) {
-          document.getElementById('checkout-content').innerHTML = "<div class='error-message'>Your cart is empty. <a href='products.html'>Continue shopping</a></div>";
-          return;
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label>Shipping Address</label>
+                    <input type="text" id="address" required placeholder="123 Pink St, Dream City">
+                </div>
+                <!-- Payment details would go here in a real app -->
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Load footer
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+
+        async function initCheckout() {
+            auth.checkAuth();
+            try {
+                const cartData = await cart.get();
+                const summaryDiv = document.getElementById('order-summary');
+                
+                if (!cartData || !cartData.items || cartData.items.length === 0) {
+                    alert('Cart is empty!');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                summaryDiv.innerHTML = `
+                    <p><strong>Total Items:</strong> ${cartData.items.reduce((acc, item) => acc + item.quantity, 0)}</p>
+                    <p><strong>Total Amount:</strong> ${ui.formatPrice(cartData.total_amount)}</p>
+                `;
+            } catch (error) {
+                console.error("Error loading checkout:", error);
+            }
         }
-        let html = `<div style="margin-bottom:2em;">`;
-        html += `<h3 style="margin-bottom:1em;">Order Summary</h3>`;
-        html += cart.items.map(item => `<div style="display:flex;align-items:center;gap:1em;">
-        <img src="placeholder-product.png" alt="" style="height:54px;width:54px;">
-        <div style="flex:2;">${item.product.name} (x${item.quantity})</div>
-        <div style="color:#ea4c89;">&#8377;${item.product.price * item.quantity}</div>
-      </div>`).join('');
-        html += `<div style="margin-top:1em;font-weight:600;">Total: &#8377;${cart.total_amount}</div>`;
-        html += `</div>`;
-        html += `<form id="order-form" style="max-width:400px;margin:2em auto;background:#f9f6fa;">
-          <h4>Payment Method</h4>
-          <div style="margin-bottom:1em;">Cash on Delivery</div>
-          <button class="btn btn-block" type="submit">Place Order</button>
-        </form>`;
-        document.getElementById('checkout-content').innerHTML = html;
-        document.getElementById('order-form').onsubmit = placeOrder;
-      } catch (err) {
-        showError('checkout-msg', err.message || 'Could not load cart.');
-      }
-    }
-    async function placeOrder(e) {
-      e.preventDefault();
-      try {
-        await apiRequest('/orders/','POST',{},true);
-        showSuccess('checkout-msg',"Order placed! Redirecting to orders...");
-        setTimeout(()=>window.location='orders.html',1200);
-      } catch (err) {
-        showError('checkout-msg', err.message || "Failed to place order");
-      }
-    }
-  </script>
+
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            
+            try {
+                btn.textContent = 'Processing...';
+                btn.disabled = true;
+
+                // Create order via API
+                await api.post('/api/orders/', {
+                    shipping_address: document.getElementById('address').value
+                });
+
+                ui.showToast('Order placed successfully! 🎉', 'success');
+                
+                // Clear cart locally if needed, but backend usually handles it
+                // await cart.clear(); 
+
+                setTimeout(() => {
+                    window.location.href = 'orders.html';
+                }, 2000);
+
+            } catch (error) {
+                ui.showToast(error.message, 'error');
+                btn.textContent = 'Place Order';
+                btn.disabled = false;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initCheckout);
+    </script>
 </body>
 </html>

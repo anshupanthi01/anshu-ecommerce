@@ -30,6 +30,7 @@ class ProductInfo(BaseModel):
     price: Decimal
     stock: int
     is_active:  int
+    image_url: Optional[str] = None
 
     class Config: 
         from_attributes = True

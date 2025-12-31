@@ -1,93 +1,107 @@
-<!-- orders.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Orders | Glow Fashion</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css?family=Poppins:400,600,700&display=swap" rel="stylesheet">
-  <script type="module" src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Glam</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .order-card {
+            background: var(--glass-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--glass-border);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .order-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="navbar">
-      <span class="logo">Glow</span>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="products.html">Shop</a>
-        <a href="orders.html" class="active" id="nav-orders">Orders</a>
-        <a href="cart.html" id="nav-cart">Cart</a>
-        <a href="profile.html" id="nav-user" style="display:none;">Profile</a>
-        <a href="login.html" id="nav-login">Login</a>
-        <a href="register.html" id="nav-register">Register</a>
-        <a href="#" id="nav-logout" style="display:none;" onclick="logout();return false;">Logout</a>
-      </nav>
-    </div>
-  </header>
-  <section>
-    <h2>Order History</h2>
-    <div id="orders-list"></div>
-    <div id="orders-loader"></div>
-    <div id="orders-msg"></div>
-  </section>
-  <footer>
-    <div class="footer-links">
-      <a href="products.html">Shop</a>
-      <a href="orders.html">Orders</a>
-      <a href="profile.html">Profile</a>
-      <a href="cart.html">Cart</a>
-    </div>
-    <div class="contact-info">
-      ✉️ Email: hello@glowfashion.com &nbsp; | &nbsp; 📞 Phone: +91-99999-88888
-    </div>
-    <div style="margin-top:0.4em; color:#af3f72;">&copy; 2025 Glow. All rights reserved.</div>
-  </footer>
-  <script type="module">
-    import { apiRequest, requireLogin, showUserNav, showLoader, hideLoader, showError, showSuccess } from './app.js';
+    <nav id="navbar" class="navbar"></nav>
 
-    document.addEventListener('DOMContentLoaded', () => {
-      requireLogin();
-      showUserNav();
-      loadOrders();
-    });
-
-    async function loadOrders() {
-      showLoader('orders-loader');
-      try {
-        let orders = await apiRequest('/orders/','GET',null,true);
-        if (!orders.length) {
-          document.getElementById('orders-list').innerHTML = "<div class='error-message'>No orders yet.</div>";
-        } else {
-          document.getElementById('orders-list').innerHTML = orders.map(orderHTML).join('');
-        }
-      } catch (err) {
-        showError('orders-msg', err.message || "Failed to load orders.");
-      }
-      hideLoader('orders-loader');
-    }
-
-    function orderHTML(order) {
-      return `
-        <div style="background:#fffafc;border-radius:9px;padding:1.2em;margin-bottom:1.2em;box-shadow:0 1.5px 5px #f8d8e4;">
-          <div><b>Order #${order.id}</b> • Total: &#8377;${order.total_amount} • Date: ${new Date(order.order_date).toLocaleDateString()}</div>
-          <div>Status: <span style="color:${order.status==='delivered'?'#1e9955':'#b16e1e'};">${order.status}</span></div>
-          <button class="btn" style="padding:0.3em 1em;margin-top:0.8em;" onclick="window.location='order-view.html?id=${order.id}'">View Details</button>
-          ${order.status==='pending'?`<button class="btn" style="padding:0.3em 1em;background:#c71c46;margin-left:1em;color:#fff;" onclick="cancelOrder(${order.id});">Cancel</button>`:""}
+    <div class="container">
+        <h1 style="margin-bottom: 2rem; color: var(--dark-pink);">My Orders 📦</h1>
+        
+        <div id="orders-list">
+            <div style="text-align: center;">Loading orders...</div>
         </div>
-      `;
-    }
+    </div>
 
-    window.cancelOrder = async function(id) {
-      if (!confirm("Cancel this order?")) return;
-      try {
-        await apiRequest(`/orders/${id}/cancel`,'PUT',null,true);
-        showSuccess('orders-msg',"Order cancelled.");
-        loadOrders();
-      } catch (err) {
-        showError('orders-msg', err.message || "Failed to cancel order.");
-      }
-    };
-  </script>
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Load footer
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+
+        async function loadOrders() {
+            auth.checkAuth();
+            const container = document.getElementById('orders-list');
+            
+            try {
+                // Use /api/orders/ endpoint
+                const orders = await api.get('/api/orders/');
+                
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">No orders found.</p>';
+                    return;
+                }
+
+                container.innerHTML = orders.map(order => `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <strong>Order #${order.id}</strong><br>
+                                <small>${new Date(order.created_at).toLocaleDateString()}</small>
+                            </div>
+                            <div style="text-align: right;">
+                                <span class="order-status status-${order.status.toLowerCase()}">${order.status}</span>
+                                <div style="margin-top: 0.5rem; font-weight: 700; color: var(--primary-pink);">
+                                    ${ui.formatPrice(order.total_amount)}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            ${order.items ? order.items.map(item => `
+                                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                                    <span>${item.product_name} x ${item.quantity}</span>
+                                    <span>${ui.formatPrice(item.price)}</span>
+                                </div>
+                            `).join('') : '<p>No items details</p>'}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                container.innerHTML = `<p style="color: red; text-align: center;">Error: ${error.message}</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadOrders);
+    </script>
 </body>
 </html>
