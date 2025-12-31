@@ -66,10 +66,7 @@ const ui = {
     },
 
     formatPrice: (price) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(Number(price));
+        return `NRs. ${Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 };
 

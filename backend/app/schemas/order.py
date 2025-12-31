@@ -45,6 +45,7 @@ class ProductBasic(BaseModel):
     id: int
     name: str
     price: Decimal
+    image_url: Optional[str] = None
 
     class Config: 
         from_attributes = True
@@ -66,7 +67,10 @@ class OrderWithItems(OrderResponse):
 
 
 class OrderDetail(OrderResponse):
-    items: List[OrderItemWithProduct] = []
+    items: List[OrderItemWithProduct] = Field(default_factory=list, alias="items")
+    class Config:
+        from_attributes = True
+        allow_population_by_field_name = True
 
 
 class OrderSummary(BaseModel):

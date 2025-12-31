@@ -54,6 +54,7 @@ def get_order_item_with_product(db: Session, item_id: int) -> Optional[dict]:
             "name": db_item.product.name,
             "price": db_item.product.price,
             "sku": db_item.product.sku,
+            "image_url": db_item.product.image_url 
         },
     }
 
@@ -76,6 +77,7 @@ def get_order_items_with_products(db: Session, order_id: int) -> list[dict]:
                 "name": item.product.name,
                 "price": item.product.price,
                 "sku": item.product.sku,
+                "image_url": item.product.image_url  
             },
         })
     

@@ -60,5 +60,6 @@ const cart = {
             ui.showToast(error.message, 'error');
             return false;
         }
-    }
+    },
 };
+

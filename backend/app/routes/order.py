@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
 from app.models import User
-from app.schemas import OrderResponse, OrderUpdate
+from app.schemas import OrderResponse, OrderUpdate, OrderDetail
 from app.crud import (
     create_order_from_cart,
     get_order_by_id_and_user,
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 # ✅ Get all orders for current user
-@router.get("/", response_model=List[OrderResponse])
+@router.get("/", response_model=List[OrderDetail])
 def list_orders(
     skip: int = 0,
     limit: int = 100,

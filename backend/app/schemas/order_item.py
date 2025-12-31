@@ -38,6 +38,7 @@ class ProductInfo(BaseModel):
     name: str
     price:  Decimal
     sku: Optional[str] = None
+    image_url: Optional[str] = None 
 
     class Config: 
         from_attributes = True

@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 from decimal import Decimal
 from datetime import datetime
@@ -63,12 +63,17 @@ def get_order_by_id_and_user(db:  Session, order_id: int, user_id: int) -> Optio
     ).first()
 
 
-# ✅ Get all orders for user
-def get_user_orders(db:  Session, user_id: int, skip: int = 0, limit: int = 100) -> list[Order]:
-    return db.query(Order).filter(
-        Order.user_id == user_id
-    ).order_by(Order.order_date.desc()).offset(skip).limit(limit).all()
-
+def get_user_orders(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> list[Order]:
+    return (
+        db.query(Order)
+        .options(
+            joinedload(Order.items).joinedload(OrderItem.product)
+        )
+        .filter(Order.user_id == user_id)
+        .order_by(Order.order_date.desc())
+        .offset(skip).limit(limit)
+        .all()
+    )
 
 # ✅ Get all orders (admin)
 def get_all_orders(db:  Session, skip: int = 0, limit: int = 100) -> list[Order]: 
@@ -132,6 +137,8 @@ def get_order_with_items(db: Session, order_id: int) -> Optional[dict]:
                 "id": item.product.id,
                 "name":  item.product.name,
                 "price": item.product.price,
+                "sku": item.product.sku,
+                "image_url": item.product.image_url,
             },
         })
     

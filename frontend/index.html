@@ -58,7 +58,7 @@
                         <img src="${product.image_url ? 'http://localhost:8000' + product.image_url : 'https://via.placeholder.com/300'}" alt="${product.name}" class="product-image">
                         <div class="product-info">
                             <h3 class="product-title">${product.name}</h3>
-                            <p class="product-price">${ui.formatPrice(product.price)}</p>
+                            <div class="product-price">NRs. ${product.price}</div>
                             <div class="product-actions">
                                 <a href="product.html?id=${product.id}" class="btn btn-secondary" style="display: block; text-align: center; margin-bottom: 0.5rem;">View Details</a>
                                 <button onclick="cart.add(${product.id})" class="btn btn-primary" style="width: 100%">Add to Cart</button>
