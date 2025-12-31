@@ -6,6 +6,12 @@
 // ==== CONFIG ====
 const API_BASE = 'http://localhost:8000/api';
 
+import {
+  apiRequest, isLoggedIn, showUserNav, logout, showLoader, hideLoader
+} from './app.js';
+
+window.logout = logout;  // <-- THIS makes logout available to HTML ons!
+
 // ==== AUTH ====
 function saveToken(token) {
   localStorage.setItem('access_token', token);
